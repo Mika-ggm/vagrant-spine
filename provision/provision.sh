@@ -24,6 +24,9 @@ apt_package_install_list=()
 # virtual machine. We'll then loop through each of these and check individual
 # status before adding them to the apt_package_install_list array.
 apt_package_check_list=(
+    htop
+    openjdk-7-jre
+
     # mysql is the default database
     mysql-server
 
@@ -159,6 +162,29 @@ redis_setup() {
   service redis-server restart
 }
 
+elasticsearch_setup() {
+  if [[ -f "/etc/elasticsearch/elasticsearch.yml" ]]; then
+      echo -e "\nSkip installing elasticsearch"
+  else
+      wget -q "https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.2.0/elasticsearch-2.2.0.deb"
+      dpkg -i elasticsearch-2.2.0.deb
+  fi
+
+  cp "/srv/config/elasticsearch-config/elasticsearch.yml" "/etc/elasticsearch/elasticsearch.yml"
+  echo " * Copied /srv/config/elasticsearch-config/elasticsearch.yml    to /etc/elasticsearch/elasticsearch.yml"
+
+  cd /usr/share/elasticsearch
+
+  if [[ -d "/usr/share/elasticsearch/plugins/head" ]]; then
+      echo -e "\nSkip plugin head"
+  else
+      echo -e "\nInstalling plugin head"
+      bin/plugin install head
+  fi
+
+  service elasticsearch restart
+}
+
 mysql_setup() {
   # If MySQL is installed, go through the various imports and service tasks.
   local exists_mysql
@@ -234,6 +260,7 @@ package_install
 mysql_setup
 mongod_setup
 redis_setup
+elasticsearch_setup
 
 # And it's done
 end_seconds="$(date +%s)"
