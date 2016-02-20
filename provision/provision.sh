@@ -29,6 +29,9 @@ apt_package_check_list=(
 
     #mongodb
     mongodb-org
+
+    #redis
+    redis-server
 )
 
 ### FUNCTIONS
@@ -132,6 +135,9 @@ package_install() {
   apt-key adv --quiet --keyserver "hkp://keyserver.ubuntu.com:80" --recv-key 7F0CEB10 2>&1 | grep "gpg:"
   apt-key export 7F0CEB10 | apt-key add -
 
+  # Add Redis PPA
+  add-apt-repository ppa:chris-lea/redis-server
+
   # Update all of the package references before installing anything
   echo "Running apt-get update..."
   apt-get update -y
@@ -141,6 +147,16 @@ package_install() {
   apt-get install -y ${apt_package_install_list[@]}
   # Clean up apt caches
   apt-get clean
+}
+
+redis_setup() {
+  # Copy mysql configuration from local
+  cp "/srv/config/redis-config/redis.conf" "/etc/redis/redis.conf"
+
+  echo " * Copied /srv/config/redis-config/redis.conf      /etc/redis.conf"
+
+  echo "service redis-server restart"
+  service redis-server restart
 }
 
 mysql_setup() {
@@ -217,6 +233,7 @@ echo "Main packages check and install."
 package_install
 mysql_setup
 mongod_setup
+redis_setup
 
 # And it's done
 end_seconds="$(date +%s)"
