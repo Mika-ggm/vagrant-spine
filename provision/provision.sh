@@ -24,8 +24,37 @@ apt_package_install_list=()
 # virtual machine. We'll then loop through each of these and check individual
 # status before adding them to the apt_package_install_list array.
 apt_package_check_list=(
+    # PHP5
+    #
+    # Our base packages for php5. As long as php5-fpm and php5-cli are
+    # installed, there is no need to install the general php5 package, which
+    # can sometimes install apache as a requirement.
+    php5-fpm
+    php5-cli
+
+    # Common and dev packages for php
+    php5-common
+    php5-dev
+
+    # Extra PHP modules that we find useful
+    php5-mcrypt
+    php5-curl
+    php-pear
+    php5-gd
+    php5-mysql
+
+    # nginx is installed as the default web server
+    nginx
+
     htop
     openjdk-7-jre
+    git-core
+    zip
+    unzip
+    curl
+    make
+    gettext
+    ntp
 
     # mysql is the default database
     mysql-server
@@ -134,6 +163,10 @@ package_install() {
   ln -sf /srv/config/apt-source-append.list /etc/apt/sources.list.d/spine-sources.list
   echo "Linked custom apt sources"
 
+  # Retrieve the Nginx signing key from nginx.org
+  echo "Applying Nginx signing key..."
+  wget --quiet "http://nginx.org/keys/nginx_signing.key" -O- | apt-key add -
+
   # Apply the mongodb assigning key
   apt-key adv --quiet --keyserver "hkp://keyserver.ubuntu.com:80" --recv-key 7F0CEB10 2>&1 | grep "gpg:"
   apt-key export 7F0CEB10 | apt-key add -
@@ -150,6 +183,63 @@ package_install() {
   apt-get install -y ${apt_package_install_list[@]}
   # Clean up apt caches
   apt-get clean
+}
+
+nginx_setup() {
+  # Create an SSL key and certificate for HTTPS support.
+  if [[ ! -e /etc/nginx/server.key ]]; then
+    echo "Generate Nginx server private key..."
+    vvvgenrsa="$(openssl genrsa -out /etc/nginx/server.key 2048 2>&1)"
+    echo "$vvvgenrsa"
+  fi
+  if [[ ! -e /etc/nginx/server.crt ]]; then
+    echo "Sign the certificate using the above private key..."
+    vvvsigncert="$(openssl req -new -x509 \
+            -key /etc/nginx/server.key \
+            -out /etc/nginx/server.crt \
+            -days 3650 \
+            -subj /CN=*.spinebox.local 2>&1)"
+    echo "$vvvsigncert"
+  fi
+
+  echo -e "\nSetup configuration files..."
+
+  # Used to ensure proper services are started on `vagrant up`
+  cp "/srv/config/init/start.conf" "/etc/init/start.conf"
+  echo " * Copied /srv/config/init/start.conf               to /etc/init/start.conf"
+
+  # Copy nginx configuration from local
+  cp "/srv/config/nginx-config/nginx.conf" "/etc/nginx/nginx.conf"
+  if [[ ! -d "/etc/nginx/custom-sites" ]]; then
+    mkdir "/etc/nginx/custom-sites/"
+  fi
+  rsync -rvzh --delete "/srv/config/nginx-config/sites/" "/etc/nginx/custom-sites/"
+
+  echo " * Copied /srv/config/nginx-config/nginx.conf           to /etc/nginx/nginx.conf"
+  echo " * Rsync'd /srv/config/nginx-config/sites/              to /etc/nginx/custom-sites"
+
+  # Add the vagrant user to the www-data group so that it has better access
+  # to PHP and Nginx related files.
+  usermod -a -G www-data vagrant
+}
+
+phpfpm_setup() {
+  # Copy php-fpm configuration from local
+  cp "/srv/config/php5-fpm-config/php5-fpm.conf" "/etc/php5/fpm/php5-fpm.conf"
+  cp "/srv/config/php5-fpm-config/www.conf" "/etc/php5/fpm/pool.d/www.conf"
+  cp "/srv/config/php5-fpm-config/php-custom.ini" "/etc/php5/fpm/conf.d/php-custom.ini"
+  cp "/srv/config/php5-fpm-config/opcache.ini" "/etc/php5/fpm/conf.d/opcache.ini"
+  cp "/srv/config/php5-fpm-config/xdebug.ini" "/etc/php5/mods-available/xdebug.ini"
+
+  # Find the path to Xdebug and prepend it to xdebug.ini
+  XDEBUG_PATH=$( find /usr -name 'xdebug.so' | head -1 )
+  sed -i "1izend_extension=\"$XDEBUG_PATH\"" "/etc/php5/mods-available/xdebug.ini"
+
+  echo " * Copied /srv/config/php5-fpm-config/php5-fpm.conf     to /etc/php5/fpm/php5-fpm.conf"
+  echo " * Copied /srv/config/php5-fpm-config/www.conf          to /etc/php5/fpm/pool.d/www.conf"
+  echo " * Copied /srv/config/php5-fpm-config/php-custom.ini    to /etc/php5/fpm/conf.d/php-custom.ini"
+  echo " * Copied /srv/config/php5-fpm-config/opcache.ini       to /etc/php5/fpm/conf.d/opcache.ini"
+  echo " * Copied /srv/config/php5-fpm-config/xdebug.ini        to /etc/php5/mods-available/xdebug.ini"
 }
 
 redis_setup() {
@@ -179,7 +269,7 @@ elasticsearch_setup() {
       echo -e "\nSkip plugin head"
   else
       echo -e "\nInstalling plugin head"
-      bin/plugin install head
+      bin/plugin install mobz/elasticsearch-head
   fi
 
   service elasticsearch restart
@@ -245,6 +335,56 @@ mongod_setup() {
   service mongod restart
 }
 
+tools_install() {
+  pecl install xdebug
+}
+
+opcached_status(){
+  # Checkout Opcache Status to provide a dashboard for viewing statistics
+  # about PHP's built in opcache.
+  if [[ ! -d "/srv/www/default/opcache-status" ]]; then
+    echo -e "\nDownloading Opcache Status, see https://github.com/rlerdorf/opcache-status/"
+    cd /srv/www/default
+    git clone "https://github.com/rlerdorf/opcache-status.git" opcache-status
+  else
+    echo -e "\nUpdating Opcache Status"
+    cd /srv/www/default/opcache-status
+    git pull --rebase origin master
+  fi
+}
+
+phpmyadmin_setup() {
+  # Download phpMyAdmin
+  if [[ ! -d /srv/www/default/database-admin ]]; then
+    echo "Downloading phpMyAdmin..."
+    cd /srv/www/default
+    wget -q -O phpmyadmin.tar.gz "https://files.phpmyadmin.net/phpMyAdmin/4.4.10/phpMyAdmin-4.4.10-all-languages.tar.gz"
+    tar -xf phpmyadmin.tar.gz
+    mv phpMyAdmin-4.4.10-all-languages database-admin
+    rm phpmyadmin.tar.gz
+  else
+    echo "PHPMyAdmin already installed."
+  fi
+  cp "/srv/config/phpmyadmin-config/config.inc.php" "/srv/www/default/database-admin/"
+}
+
+services_restart() {
+  # RESTART SERVICES
+  #
+  # Make sure the services we expect to be running are running.
+  echo -e "\nRestart services..."
+  service nginx restart
+
+  # Disable PHP Xdebug module by default
+  # php5dismod xdebug
+
+  # Enable PHP mcrypt module by default
+  # php5enmod mcrypt
+
+  service php5-fpm restart
+}
+
+
 # SCRIPT
 
 network_check
@@ -257,10 +397,19 @@ network_check
 echo " "
 echo "Main packages check and install."
 package_install
+tools_install
+nginx_setup
+phpfpm_setup
 mysql_setup
 mongod_setup
 redis_setup
 elasticsearch_setup
+services_restart
+
+echo " "
+echo "Installing/updating debugging tools"
+opcached_status
+phpmyadmin_setup
 
 # And it's done
 end_seconds="$(date +%s)"

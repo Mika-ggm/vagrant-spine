@@ -82,6 +82,13 @@ Vagrant.configure(2) do |config|
   # nginx as well as any pre-existing database files.
   config.vm.synced_folder "config/", "/srv/config"
 
+  # /srv/www/
+  #
+  # If a www directory exists in the same directory as your Vagrantfile, a mapped directory
+  # inside the VM will be created that acts as the default location for nginx sites. Put all
+  # of your project files here that you want to access through the web server
+  config.vm.synced_folder "www/", "/srv/www/", :owner => "www-data", :mount_options => [ "dmode=775", "fmode=774" ]
+
   # /srv/share/
   config.vm.synced_folder "share/", "/srv/share"
 
