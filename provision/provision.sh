@@ -26,6 +26,9 @@ apt_package_install_list=()
 apt_package_check_list=(
     # mysql is the default database
     mysql-server
+
+    #mongodb
+    mongodb-org
 )
 
 ### FUNCTIONS
@@ -122,8 +125,12 @@ package_install() {
   # echo "inet_protocols = ipv4" >> "/etc/postfix/main.cf"
 
   # Provide our custom apt sources before running `apt-get update`
-  # ln -sf /srv/config/apt-source-append.list /etc/apt/sources.list.d/vvv-sources.list
-  # echo "Linked custom apt sources"
+  ln -sf /srv/config/apt-source-append.list /etc/apt/sources.list.d/spine-sources.list
+  echo "Linked custom apt sources"
+
+  # Apply the mongodb assigning key
+  apt-key adv --quiet --keyserver "hkp://keyserver.ubuntu.com:80" --recv-key 7F0CEB10 2>&1 | grep "gpg:"
+  apt-key export 7F0CEB10 | apt-key add -
 
   # Update all of the package references before installing anything
   echo "Running apt-get update..."
@@ -186,6 +193,16 @@ mysql_setup() {
   fi
 }
 
+mongod_setup() {
+  # Copy mysql configuration from local
+  cp "/srv/config/mongod-config/mongod.conf" "/etc/mongod.conf"
+
+  echo " * Copied /srv/config/mongod-config/mongod.conf      /etc/mongod.conf"
+
+  echo "service mongod restart"
+  service mongod restart
+}
+
 # SCRIPT
 
 network_check
@@ -199,6 +216,7 @@ echo " "
 echo "Main packages check and install."
 package_install
 mysql_setup
+mongod_setup
 
 # And it's done
 end_seconds="$(date +%s)"
