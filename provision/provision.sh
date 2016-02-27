@@ -98,6 +98,7 @@ noroot() {
 profile_setup() {
   # Copy custom dotfiles and bin file for the vagrant user from local
   cp "/srv/config/bash_profile" "/home/vagrant/.bash_profile"
+  cp "/srv/config/locale" "/etc/default/locale"
 
   if [[ ! -d "/home/vagrant/bin" ]]; then
     mkdir "/home/vagrant/bin"
@@ -107,6 +108,7 @@ profile_setup() {
   chmod +x /home/vagrant/bin/*
 
   echo " * Copied /srv/config/bash_profile                      to /home/vagrant/.bash_profile"
+  echo " * Copied /srv/config/locale                            to /etc/default/locale"
   echo " * rsync'd /srv/config/homebin                          to /home/vagrant/bin"
 
   # If a bash_prompt file exists in the VVV config/ directory, copy to the VM.

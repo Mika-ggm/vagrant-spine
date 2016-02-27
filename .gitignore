@@ -1,3 +1,6 @@
 .vagrant/
-share/*
-www/*
+/share/*
+!share/.gitkeep
+/www/*
+!www/index.php
+!www/phpinfo/*
