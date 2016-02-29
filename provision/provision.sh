@@ -274,6 +274,7 @@ elasticsearch_setup() {
       bin/plugin install mobz/elasticsearch-head
   fi
 
+  update-rc.d elasticsearch defaults 95 10
   service elasticsearch restart
 }
 
