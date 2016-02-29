@@ -2,5 +2,6 @@
 /share/*
 !share/.gitkeep
 /www/*
-!www/index.php
-!www/phpinfo/*
+!www/hosts
+!www/default/index.php
+!www/default/phpinfo/index.php

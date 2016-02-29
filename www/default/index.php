@@ -13,16 +13,16 @@ if ( file_exists( 'dashboard-custom.php' ) ) {
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Vagrant Standard Development Environment</title>
+	<title>Vagrant Spine Development Environment</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 <ul class="nav">
-	<li class="active"><a href="#">Home</a></li>
-	<li><a href="https://github.com/createproblem/vagrant-stddev">Repository</a></li>
+	<li><a href="https://github.com/createproblem/vagrant-spine">Repository</a></li>
 	<li><a href="opcache-status/opcache.php">Opcache Status</a></li>
 	<li><a href="phpinfo/">PHP Info</a></li>
 	<li><a href="database-admin/">phpMyAdmin</a></li>
+	<li><a href="http://192.168.56.105:9200/_plugin/head/">Elasticsearch Head</a></li>
 </ul>
 </body>
 </html>
