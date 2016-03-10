@@ -64,6 +64,9 @@ apt_package_check_list=(
 
     #redis
     redis-server
+
+    #rabbitmq
+    rabbitmq-server
 )
 
 ### FUNCTIONS
@@ -169,9 +172,14 @@ package_install() {
   echo "Applying Nginx signing key..."
   wget --quiet "http://nginx.org/keys/nginx_signing.key" -O- | apt-key add -
 
-  # Apply the mongodb assigning key
+  # Apply the mongodb signing key
+  echo "Applying MongoDB signing key..."
   apt-key adv --quiet --keyserver "hkp://keyserver.ubuntu.com:80" --recv-key 7F0CEB10 2>&1 | grep "gpg:"
   apt-key export 7F0CEB10 | apt-key add -
+
+  # Apply RabbitMQ signing key
+  echo "Applying RabbitMQ signing key..."
+  wget --quiet "https://www.rabbitmq.com/rabbitmq-signing-key-public.asc" -O- | apt-key add -
 
   # Add Redis PPA
   add-apt-repository ppa:chris-lea/redis-server
@@ -258,7 +266,9 @@ elasticsearch_setup() {
   if [[ -f "/etc/elasticsearch/elasticsearch.yml" ]]; then
       echo -e "\nSkip installing elasticsearch"
   else
+      echo -e "\nDownloading Elasticsearch"
       wget -q "https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.2.0/elasticsearch-2.2.0.deb"
+      echo -e "\nInstalling Elasticsearch"
       dpkg -i elasticsearch-2.2.0.deb
   fi
 
@@ -385,6 +395,24 @@ services_restart() {
   # php5enmod mcrypt
 
   service php5-fpm restart
+
+  # Rabbit MQ
+  service rabbitmq-server restart
+}
+
+rabbitmq_setup() {
+  # Enable Plugins
+  echo -e "\nEnable RabbitMQ Plugins"
+  rabbitmq-plugins enable rabbitmq_management
+  echo -e "\nPlugin rabbitmq_management enabled"
+
+  # Add User
+  rabbitmqctl add_user vagrant vagrant
+  echo -e "\nUser vagrant with password vagrant created"
+
+  # Set permission
+  rabbitmqctl set_user_tags vagrant administrator
+  echo -e "\nUser promoted"
 }
 
 
@@ -407,6 +435,7 @@ mysql_setup
 mongod_setup
 redis_setup
 elasticsearch_setup
+rabbitmq_setup
 services_restart
 
 echo " "

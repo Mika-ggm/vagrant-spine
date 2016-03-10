@@ -22,7 +22,8 @@ if ( file_exists( 'dashboard-custom.php' ) ) {
 	<li><a href="opcache-status/opcache.php">Opcache Status</a></li>
 	<li><a href="phpinfo/">PHP Info</a></li>
 	<li><a href="database-admin/">phpMyAdmin</a></li>
-	<li><a href="http://192.168.56.105:9200/_plugin/head/">Elasticsearch Head</a></li>
+    <li><a href="http://192.168.56.105:9200/_plugin/head/">Elasticsearch Head</a></li>
+	<li><a href="http://192.168.56.105:15672">RabbitMQ</a></li>
 </ul>
 </body>
 </html>
