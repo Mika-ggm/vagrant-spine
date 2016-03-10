@@ -68,6 +68,9 @@ apt_package_check_list=(
 
     #rabbitmq
     rabbitmq-server
+
+    #vsftpd
+    vsftpd
 )
 
 ### FUNCTIONS
@@ -394,8 +397,11 @@ services_restart() {
 
   service php5-fpm restart
 
-  # Rabbit MQ
+  # Restart Rabbit MQ
   service rabbitmq-server restart
+
+  # Restart vsftpd
+  service vsftpd restart
 }
 
 rabbitmq_setup() {
@@ -419,7 +425,12 @@ htop_setup() {
         echo -e "\nCreated htop config directory"
     fi
     cp "/srv/config/htop-config/htoprc" "/home/vagrant/.config/htop/htoprc"
-    echo " * Copied /srv/config/htop-config/htoprc      /home/vagrant/.config/htop/htoprc"
+    echo " * Copied /srv/config/htop-config/htoprc      to /home/vagrant/.config/htop/htoprc"
+}
+
+vsftpd_setup() {
+  cp "/srv/config/vsftpd-config/vsftpd.conf" "/etc/vsftpd.conf"
+  echo -e " * Copied /srv/config/vsftpd-config/vsftpd.conf    to /etc/vsftpd.conf"
 }
 
 
@@ -444,6 +455,7 @@ mongod_setup
 redis_setup
 elasticsearch_setup
 rabbitmq_setup
+vsftpd_setup
 services_restart
 
 echo " "
