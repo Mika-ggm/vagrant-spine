@@ -55,6 +55,7 @@ apt_package_check_list=(
     make
     gettext
     ntp
+    postfix
 
     # mysql is the default database
     mysql-server
@@ -155,14 +156,11 @@ package_install() {
   # Postfix
   #
   # Use debconf-set-selections to specify the selections in the postfix setup. Set
-  # up as an 'Internet Site' with the host name 'vvv'. Note that if your current
+  # up as an 'Internet Site' with the host name 'spinebox'. Note that if your current
   # Internet connection does not allow communication over port 25, you will not be
   # able to send mail, even with postfix installed.
-  # echo postfix postfix/main_mailer_type select Internet Site | debconf-set-selections
-  # echo postfix postfix/mailname string vvv | debconf-set-selections
-
-  # Disable ipv6 as some ISPs/mail servers have problems with it
-  # echo "inet_protocols = ipv4" >> "/etc/postfix/main.cf"
+  echo postfix postfix/main_mailer_type select Internet Site | debconf-set-selections
+  echo postfix postfix/mailname string spinebox | debconf-set-selections
 
   # Provide our custom apt sources before running `apt-get update`
   ln -sf /srv/config/apt-source-append.list /etc/apt/sources.list.d/spine-sources.list
@@ -199,17 +197,17 @@ nginx_setup() {
   # Create an SSL key and certificate for HTTPS support.
   if [[ ! -e /etc/nginx/server.key ]]; then
     echo "Generate Nginx server private key..."
-    vvvgenrsa="$(openssl genrsa -out /etc/nginx/server.key 2048 2>&1)"
-    echo "$vvvgenrsa"
+    spineboxrsa="$(openssl genrsa -out /etc/nginx/server.key 2048 2>&1)"
+    echo "$spineboxrsa"
   fi
   if [[ ! -e /etc/nginx/server.crt ]]; then
     echo "Sign the certificate using the above private key..."
-    vvvsigncert="$(openssl req -new -x509 \
+    spineboxcert="$(openssl req -new -x509 \
             -key /etc/nginx/server.key \
             -out /etc/nginx/server.crt \
             -days 3650 \
             -subj /CN=*.spinebox.local 2>&1)"
-    echo "$vvvsigncert"
+    echo "$spineboxcert"
   fi
 
   echo -e "\nSetup configuration files..."
