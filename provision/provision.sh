@@ -413,6 +413,15 @@ rabbitmq_setup() {
   echo -e "\nUser promoted"
 }
 
+htop_setup() {
+    if [[ ! -d "/home/vagrant/.config/htop" ]]; then
+        mkdir -p /home/vagrant/.config/htop
+        echo -e "\nCreated htop config directory"
+    fi
+    cp "/srv/config/htop-config/htoprc" "/home/vagrant/.config/htop/htoprc"
+    echo " * Copied /srv/config/htop-config/htoprc      /home/vagrant/.config/htop/htoprc"
+}
+
 
 # SCRIPT
 
@@ -426,6 +435,7 @@ network_check
 echo " "
 echo "Main packages check and install."
 package_install
+htop_setup
 tools_install
 nginx_setup
 phpfpm_setup
