@@ -7,7 +7,12 @@ share/*
 share/backup/*
 !share/backup/.gitkeep
 
-/www/*
+# www folder settings
+www/*
 !www/hosts
+!www/default
+www/default/*
 !www/default/index.php
+!www/default/phpinfo
+www/default/phpinfo/*
 !www/default/phpinfo/index.php
