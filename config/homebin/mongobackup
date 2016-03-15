@@ -1,0 +1,30 @@
+#!/bin/bash
+
+WORK_DIR="/srv/share/backup/mongodb"
+
+# Create and change working dir
+mkdir -p ${WORK_DIR}
+cd ${WORK_DIR}
+
+# Backup
+echo "Create backup"
+mongodump --quiet
+cd dump
+
+#Pack
+for db in `find . -type d`
+do
+    archive=${db}.tar.gz
+
+    if [ ${db} != "." ]; then
+        tar -czf ${archive} ${db}
+        mv ${archive} ../
+        echo " * Packed ${db} to ${WORK_DIR}/${archive}"
+    fi
+done
+
+# Clean up
+cd ..
+rm -rf dump
+
+echo "Done"

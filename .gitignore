@@ -1,6 +1,12 @@
 .vagrant/
-/share/*
+
+# share folder settings
+share/*
 !share/.gitkeep
+!share/backup
+share/backup/*
+!share/backup/.gitkeep
+
 /www/*
 !www/hosts
 !www/default/index.php
