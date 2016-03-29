@@ -47,7 +47,7 @@ apt_package_check_list=(
     nginx
 
     htop
-    openjdk-7-jre
+    # openjdk-7-jre
     git-core
     zip
     unzip
@@ -196,6 +196,29 @@ package_install() {
   apt-get clean
 }
 
+java_setup() {
+  if [ -d "/opt/jre1.8.0_77" ]; then
+    echo "Skipping Java setup"
+    return;
+  fi
+
+  echo "Downloading Oracle Java..."
+  wget -q -O jre-8u77-linux-x64.tar.gz https://www.dropbox.com/s/3csn0qyhmbtxqan/jre-8u77-linux-x64.tar.gz?dl=0
+
+  echo "Installing Java..."
+  tar -xzf jre-8u77-linux-x64.tar.gz
+
+  mv jre1.8.0_77 /opt/
+
+  if [ -L "/etc/alternatives/java" ]; then
+    update-alternatives --remove-all "java"
+  fi
+
+  update-alternatives --install "/usr/bin/java" "java" "/opt/jre1.8.0_77/bin/java" 1
+
+  echo "Java installed"
+}
+
 nginx_setup() {
   # Create an SSL key and certificate for HTTPS support.
   if [[ ! -e /etc/nginx/server.key ]]; then
@@ -283,6 +306,13 @@ elasticsearch_setup() {
   else
       echo -e "\nInstalling plugin head"
       bin/plugin install mobz/elasticsearch-head
+  fi
+
+  if [[ -d "/usr/share/elasticsearch/plugins/bundle" ]]; then
+      echo -e "\nSkip plugin bundle"
+  else
+    echo -e "\nInstalling plugin bundle"
+    bin/plugin install 'https://github.com/jprante/elasticsearch-plugin-bundle/releases/download/2.2.0.2/elasticsearch-plugin-bundle-2.2.0.2-plugin.zip'
   fi
 
   update-rc.d elasticsearch defaults 95 10
@@ -446,6 +476,7 @@ network_check
 echo " "
 echo "Main packages check and install."
 package_install
+java_setup
 htop_setup
 tools_install
 nginx_setup
