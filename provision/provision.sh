@@ -181,6 +181,7 @@ package_install() {
   # Apply RabbitMQ signing key
   echo "Applying RabbitMQ signing key..."
   wget --quiet "https://www.rabbitmq.com/rabbitmq-signing-key-public.asc" -O- | apt-key add -
+  apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B73A36E6026DFCA
 
   # Add Redis PPA
   add-apt-repository ppa:chris-lea/redis-server
