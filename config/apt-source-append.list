@@ -7,3 +7,9 @@ deb-src http://nginx.org/packages/mainline/ubuntu/ trusty nginx
 
 # RabbitMQ
 deb http://www.rabbitmq.com/debian/ testing main
+
+# Elasticsearch
+deb https://packages.elastic.co/elasticsearch/2.x/debian stable main
+
+# Kibana
+deb http://packages.elastic.co/kibana/4.5/debian stable main

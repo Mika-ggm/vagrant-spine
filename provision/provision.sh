@@ -71,6 +71,10 @@ apt_package_check_list=(
 
     #vsftpd
     vsftpd
+
+    # elasticsearch
+    elasticsearch
+    kibana
 )
 
 ### FUNCTIONS
@@ -183,6 +187,9 @@ package_install() {
   wget --quiet "https://www.rabbitmq.com/rabbitmq-signing-key-public.asc" -O- | apt-key add -
   apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B73A36E6026DFCA
 
+  # Retrieve the Elasticsearch signing key
+  wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | apt-key add -
+
   # Add Redis PPA
   add-apt-repository ppa:chris-lea/redis-server
 
@@ -288,15 +295,7 @@ redis_setup() {
 }
 
 elasticsearch_setup() {
-  if [[ -f "/etc/elasticsearch/elasticsearch.yml" ]]; then
-      echo -e "\nSkip installing elasticsearch"
-  else
-      echo -e "\nDownloading Elasticsearch"
-      wget -q "https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.2.0/elasticsearch-2.2.0.deb"
-      echo -e "\nInstalling Elasticsearch"
-      dpkg -i elasticsearch-2.2.0.deb
-  fi
-
+  # Copy Config
   cp "/srv/config/elasticsearch-config/elasticsearch.yml" "/etc/elasticsearch/elasticsearch.yml"
   echo " * Copied /srv/config/elasticsearch-config/elasticsearch.yml    to /etc/elasticsearch/elasticsearch.yml"
 
@@ -316,8 +315,28 @@ elasticsearch_setup() {
     bin/plugin install 'https://github.com/jprante/elasticsearch-plugin-bundle/releases/download/2.2.0.2/elasticsearch-plugin-bundle-2.2.0.2-plugin.zip'
   fi
 
+  if [[ -d "/usr/share/elasticsearch/plugins/license" ]]; then
+      echo -e "\nSkip plugin license"
+  else
+      echo -e "\nInstalling plugin license"
+      bin/plugin install license
+  fi
+
+  if [[ -d "/usr/share/elasticsearch/plugins/marvel-agent" ]]; then
+      echo -e "\nSkip plugin marvel"
+  else
+      echo -e "\nInstalling plugin marvel"
+      echo "y" | bin/plugin install marvel-agent
+      /opt/kibana/bin/kibana plugin --install elasticsearch/marvel/latest
+  fi
+
+  cp "/srv/config/elasticsearch-config/kibana" "/etc/default/kibana"
+  echo " * Copied /srv/config/elasticsearch-config/kibana to /etc/default/kibana"
+
   update-rc.d elasticsearch defaults 95 10
+  update-rc.d kibana defaults 95 10
   service elasticsearch restart
+  service kibana restart
 }
 
 mysql_setup() {

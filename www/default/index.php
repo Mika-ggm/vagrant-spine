@@ -23,6 +23,8 @@ if ( file_exists( 'dashboard-custom.php' ) ) {
 	<li><a href="phpinfo/">PHP Info</a></li>
 	<li><a href="database-admin/">phpMyAdmin</a></li>
     <li><a href="http://192.168.56.105:9200/_plugin/head/">Elasticsearch Head</a></li>
+    <li><a href="http://192.168.56.105:5601/app/marvel">Elasticsearch Marvel</a></li>
+    <li><a href="http://192.168.56.105:5601/app/kibana">Elasticsearch Kibana</a></li>
 	<li><a href="http://192.168.56.105:15672">RabbitMQ</a></li>
 </ul>
 </body>
