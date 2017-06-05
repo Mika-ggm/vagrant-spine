@@ -24,30 +24,12 @@ apt_package_install_list=()
 # virtual machine. We'll then loop through each of these and check individual
 # status before adding them to the apt_package_install_list array.
 apt_package_check_list=(
-    # PHP5
-    #
-    # Our base packages for php5. As long as php5-fpm and php5-cli are
-    # installed, there is no need to install the general php5 package, which
-    # can sometimes install apache as a requirement.
-    php5-fpm
-    php5-cli
-
-    # Common and dev packages for php
-    php5-common
-    php5-dev
-
-    # Extra PHP modules that we find useful
-    php5-mcrypt
-    php5-curl
-    php-pear
-    php5-gd
-    php5-mysql
-
-    # nginx is installed as the default web server
+    php5.6-fpm
+    php5.6-cli
+    php-xdebug
+    redis-server
     nginx
-
     htop
-    # openjdk-7-jre
     git-core
     zip
     unzip
@@ -56,25 +38,8 @@ apt_package_check_list=(
     gettext
     ntp
     postfix
-
-    # mysql is the default database
-    mysql-server
-
-    #mongodb
     mongodb-org
-
-    #redis
-    redis-server
-
-    #rabbitmq
-    rabbitmq-server
-
-    #vsftpd
-    vsftpd
-
-    # elasticsearch
-    elasticsearch
-    kibana
+    mysql-server
 )
 
 ### FUNCTIONS
@@ -108,24 +73,24 @@ noroot() {
 
 profile_setup() {
   # Copy custom dotfiles and bin file for the vagrant user from local
-  cp "/srv/config/bash_profile" "/home/vagrant/.bash_profile"
+  cp "/srv/config/bash_profile" "/home/ubuntu/.bash_profile"
   cp "/srv/config/locale" "/etc/default/locale"
 
-  if [[ ! -d "/home/vagrant/bin" ]]; then
-    mkdir "/home/vagrant/bin"
+  if [[ ! -d "/home/ubuntu/bin" ]]; then
+    mkdir "/home/ubuntu/bin"
   fi
 
   rsync -rvzh --delete "/srv/config/homebin/" "/home/vagrant/bin/"
   chmod +x /home/vagrant/bin/*
 
-  echo " * Copied /srv/config/bash_profile                      to /home/vagrant/.bash_profile"
+  echo " * Copied /srv/config/bash_profile                      to /home/ubuntu/.bash_profile"
   echo " * Copied /srv/config/locale                            to /etc/default/locale"
-  echo " * rsync'd /srv/config/homebin                          to /home/vagrant/bin"
+  echo " * rsync'd /srv/config/homebin                          to /home/ubuntu/bin"
 
   # If a bash_prompt file exists in the VVV config/ directory, copy to the VM.
   if [[ -f "/srv/config/bash_prompt" ]]; then
-    cp "/srv/config/bash_prompt" "/home/vagrant/.bash_prompt"
-    echo " * Copied /srv/config/bash_prompt to /home/vagrant/.bash_prompt"
+    cp "/srv/config/bash_prompt" "/home/ubuntu/.bash_prompt"
+    echo " * Copied /srv/config/bash_prompt to /home/ubuntu/.bash_prompt"
   fi
 }
 
@@ -179,19 +144,20 @@ package_install() {
 
   # Apply the mongodb signing key
   echo "Applying MongoDB signing key..."
-  apt-key adv --quiet --keyserver "hkp://keyserver.ubuntu.com:80" --recv-key 7F0CEB10 2>&1 | grep "gpg:"
-  apt-key export 7F0CEB10 | apt-key add -
+  apt-key adv --quiet --keyserver "hkp://keyserver.ubuntu.com:80" --recv-key D68FA50FEA312927 2>&1 | grep "gpg:"
+  apt-key export D68FA50FEA312927 | apt-key add -
 
   # Apply RabbitMQ signing key
-  echo "Applying RabbitMQ signing key..."
-  wget --quiet "https://www.rabbitmq.com/rabbitmq-signing-key-public.asc" -O- | apt-key add -
-  apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B73A36E6026DFCA
+  # echo "Applying RabbitMQ signing key..."
+  # wget --quiet "https://www.rabbitmq.com/rabbitmq-signing-key-public.asc" -O- | apt-key add -
+  # apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B73A36E6026DFCA
 
   # Retrieve the Elasticsearch signing key
-  wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | apt-key add -
+  # wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | apt-key add -
 
-  # Add Redis PPA
+  # Add Redis and PHP PPA
   add-apt-repository ppa:chris-lea/redis-server
+  add-apt-repository ppa:ondrej/php
 
   # Update all of the package references before installing anything
   echo "Running apt-get update..."
@@ -262,26 +228,26 @@ nginx_setup() {
 
   # Add the vagrant user to the www-data group so that it has better access
   # to PHP and Nginx related files.
-  usermod -a -G www-data vagrant
+  usermod -a -G www-data ubuntu
 }
 
 phpfpm_setup() {
   # Copy php-fpm configuration from local
-  cp "/srv/config/php5-fpm-config/php5-fpm.conf" "/etc/php5/fpm/php5-fpm.conf"
-  cp "/srv/config/php5-fpm-config/www.conf" "/etc/php5/fpm/pool.d/www.conf"
-  cp "/srv/config/php5-fpm-config/php-custom.ini" "/etc/php5/fpm/conf.d/php-custom.ini"
-  cp "/srv/config/php5-fpm-config/opcache.ini" "/etc/php5/fpm/conf.d/opcache.ini"
-  cp "/srv/config/php5-fpm-config/xdebug.ini" "/etc/php5/mods-available/xdebug.ini"
+  cp "/srv/config/php5-fpm-config/php5-fpm.conf" "/etc/php/5.6/fpm/php-fpm.conf"
+  cp "/srv/config/php5-fpm-config/www.conf" "/etc/php/5.6/fpm/pool.d/www.conf"
+  cp "/srv/config/php5-fpm-config/php-custom.ini" "/etc/php/5.6/fpm/conf.d/php-custom.ini"
+  cp "/srv/config/php5-fpm-config/opcache.ini" "/etc/php/5.6/fpm/conf.d/opcache.ini"
+  cp "/srv/config/php5-fpm-config/xdebug.ini" "/etc/php/5.6/mods-available/xdebug.ini"
 
   # Find the path to Xdebug and prepend it to xdebug.ini
   XDEBUG_PATH=$( find /usr -name 'xdebug.so' | head -1 )
-  sed -i "1izend_extension=\"$XDEBUG_PATH\"" "/etc/php5/mods-available/xdebug.ini"
+  sed -i "1izend_extension=\"$XDEBUG_PATH\"" "/etc/php/5.6/mods-available/xdebug.ini"
 
-  echo " * Copied /srv/config/php5-fpm-config/php5-fpm.conf     to /etc/php5/fpm/php5-fpm.conf"
-  echo " * Copied /srv/config/php5-fpm-config/www.conf          to /etc/php5/fpm/pool.d/www.conf"
-  echo " * Copied /srv/config/php5-fpm-config/php-custom.ini    to /etc/php5/fpm/conf.d/php-custom.ini"
-  echo " * Copied /srv/config/php5-fpm-config/opcache.ini       to /etc/php5/fpm/conf.d/opcache.ini"
-  echo " * Copied /srv/config/php5-fpm-config/xdebug.ini        to /etc/php5/mods-available/xdebug.ini"
+  echo " * Copied /srv/config/php5-fpm-config/php5-fpm.conf     to /etc/php/5.6/fpm/php5-fpm.conf"
+  echo " * Copied /srv/config/php5-fpm-config/www.conf          to /etc/php/5.6/fpm/pool.d/www.conf"
+  echo " * Copied /srv/config/php5-fpm-config/php-custom.ini    to /etc/php/5.6/fpm/conf.d/php-custom.ini"
+  echo " * Copied /srv/config/php5-fpm-config/opcache.ini       to /etc/php/5.6/fpm/conf.d/opcache.ini"
+  echo " * Copied /srv/config/php5-fpm-config/xdebug.ini        to /etc/php/5.6/mods-available/xdebug.ini"
 }
 
 redis_setup() {
@@ -392,8 +358,10 @@ mysql_setup() {
 mongod_setup() {
   # Copy mysql configuration from local
   cp "/srv/config/mongod-config/mongod.conf" "/etc/mongod.conf"
-
-  echo " * Copied /srv/config/mongod-config/mongod.conf      /etc/mongod.conf"
+  cp "/srv/config/mongod-config/mongod.service" "/lib/systemd/system/mongod.service"
+  systemctl enable mongod
+  echo " * Copied /srv/config/mongod-config/mongod.conf      to /etc/mongod.conf"
+  echo " * Copied /srv/config/mongod-config/mongod.service   to /lib/systemd/system/mongod.service"
 
   echo "service mongod restart"
   service mongod restart
@@ -445,13 +413,13 @@ services_restart() {
   # Enable PHP mcrypt module by default
   # php5enmod mcrypt
 
-  service php5-fpm restart
+  service php5.6-fpm restart
 
   # Restart Rabbit MQ
-  service rabbitmq-server restart
+  # service rabbitmq-server restart
 
   # Restart vsftpd
-  service vsftpd restart
+  # service vsftpd restart
 }
 
 rabbitmq_setup() {
@@ -496,17 +464,17 @@ network_check
 echo " "
 echo "Main packages check and install."
 package_install
-java_setup
+# java_setup
 htop_setup
-tools_install
+# tools_install
 nginx_setup
 phpfpm_setup
 mysql_setup
 mongod_setup
 redis_setup
-elasticsearch_setup
-rabbitmq_setup
-vsftpd_setup
+# elasticsearch_setup
+# rabbitmq_setup
+# vsftpd_setup
 services_restart
 
 echo " "

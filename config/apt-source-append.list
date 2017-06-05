@@ -1,15 +1,15 @@
 # Provides MongoDB
-deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.0 multiverse
+deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse
 
 # Provides Nginx mainline
-deb http://nginx.org/packages/mainline/ubuntu/ trusty nginx
-deb-src http://nginx.org/packages/mainline/ubuntu/ trusty nginx
+deb http://nginx.org/packages/mainline/ubuntu/ xenial nginx
+deb-src http://nginx.org/packages/mainline/ubuntu/ xenial nginx
 
 # RabbitMQ
-deb http://www.rabbitmq.com/debian/ testing main
+# deb http://www.rabbitmq.com/debian/ testing main
 
 # Elasticsearch
-deb https://packages.elastic.co/elasticsearch/2.x/debian stable main
+# deb https://packages.elastic.co/elasticsearch/2.x/debian stable main
 
 # Kibana
-deb http://packages.elastic.co/kibana/4.5/debian stable main
+# deb http://packages.elastic.co/kibana/4.5/debian stable main
