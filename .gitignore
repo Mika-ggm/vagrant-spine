@@ -1,6 +1,6 @@
 .vagrant/
 .DS_Store
-
+ubuntu-xenial-*.log
 # share folder settings
 share/*
 !share/.gitkeep
