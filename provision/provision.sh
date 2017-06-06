@@ -7,6 +7,8 @@
 # or `vagrant reload` are used. It provides all of the default packages and
 # configurations included with Varying Vagrant Vagrants.
 
+NODE_VERSION=7.6.0
+
 # By storing the date now, we can calculate the duration of provisioning at the
 # end of this script.
 start_seconds="$(date +%s)"
@@ -24,9 +26,18 @@ apt_package_install_list=()
 # virtual machine. We'll then loop through each of these and check individual
 # status before adding them to the apt_package_install_list array.
 apt_package_check_list=(
+    php5.6-dev
     php5.6-fpm
     php5.6-cli
-    php-xdebug
+    php5.6-mongo
+    php5.6-redis
+    php5.6-mbstring
+    php5.6-mcrypt
+    php5.6-curl
+    php5.6-intl
+    php5.6-ftp
+    php5.6-xdebug
+    php5.6-xml
     redis-server
     nginx
     htop
@@ -40,6 +51,10 @@ apt_package_check_list=(
     postfix
     mongodb-org
     mysql-server
+    ruby
+    ruby-dev
+    gcc
+    samba
 )
 
 ### FUNCTIONS
@@ -157,7 +172,7 @@ package_install() {
 
   # Add Redis and PHP PPA
   add-apt-repository ppa:chris-lea/redis-server
-  add-apt-repository ppa:ondrej/php
+  LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php
 
   # Update all of the package references before installing anything
   echo "Running apt-get update..."
@@ -218,11 +233,14 @@ nginx_setup() {
 
   # Copy nginx configuration from local
   cp "/srv/config/nginx-config/nginx.conf" "/etc/nginx/nginx.conf"
+  cp "/srv/config/nginx-config/fastcgi_params" "/etc/nginx/"
+  cp "/srv/config/nginx-config/upstream.conf" "/etc/nginx/conf.d/"
+
   if [[ ! -d "/etc/nginx/custom-sites" ]]; then
     mkdir "/etc/nginx/custom-sites/"
   fi
   rsync -rvzh --delete "/srv/config/nginx-config/sites/" "/etc/nginx/custom-sites/"
-
+  rm -rf /etc/nginx/conf.d/default.conf
   echo " * Copied /srv/config/nginx-config/nginx.conf           to /etc/nginx/nginx.conf"
   echo " * Rsync'd /srv/config/nginx-config/sites/              to /etc/nginx/custom-sites"
 
@@ -237,11 +255,11 @@ phpfpm_setup() {
   cp "/srv/config/php5-fpm-config/www.conf" "/etc/php/5.6/fpm/pool.d/www.conf"
   cp "/srv/config/php5-fpm-config/php-custom.ini" "/etc/php/5.6/fpm/conf.d/php-custom.ini"
   cp "/srv/config/php5-fpm-config/opcache.ini" "/etc/php/5.6/fpm/conf.d/opcache.ini"
-  cp "/srv/config/php5-fpm-config/xdebug.ini" "/etc/php/5.6/mods-available/xdebug.ini"
+  # cp "/srv/config/php5-fpm-config/xdebug.ini" "/etc/php/5.6/mods-available/xdebug.ini"
 
   # Find the path to Xdebug and prepend it to xdebug.ini
-  XDEBUG_PATH=$( find /usr -name 'xdebug.so' | head -1 )
-  sed -i "1izend_extension=\"$XDEBUG_PATH\"" "/etc/php/5.6/mods-available/xdebug.ini"
+  # XDEBUG_PATH=$( find /usr -name 'xdebug.so' | head -1 )
+  # sed -i "1izend_extension=\"$XDEBUG_PATH\"" "/etc/php/5.6/mods-available/xdebug.ini"
 
   echo " * Copied /srv/config/php5-fpm-config/php5-fpm.conf     to /etc/php/5.6/fpm/php5-fpm.conf"
   echo " * Copied /srv/config/php5-fpm-config/www.conf          to /etc/php/5.6/fpm/pool.d/www.conf"
@@ -258,6 +276,39 @@ redis_setup() {
 
   echo "service redis-server restart"
   service redis-server restart
+}
+
+ruby_setup() {
+  gem install sass -v 3.4.22 --no-ri --no-rdoc
+  gem install compass --no-ri --no-rdoc
+}
+
+nodejs_setup() {
+  echo "Installing nodejs"
+  curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz" \
+  && tar -xzf "node-v$NODE_VERSION-linux-x64.tar.gz" -C /usr/local --strip-components=1 \
+  && ln -s /usr/local/bin/node /usr/local/bin/nodejs
+
+  npm install --global bower uglify-js uglifycss
+}
+
+composer_setup() {
+  php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+	&& php composer-setup.php --filename=composer --install-dir=/usr/bin \
+	&& php -r "unlink('composer-setup.php');"
+}
+
+samba_setup() {
+  if [[ ! -d "/var/www" ]]; then
+    mkdir /var/www
+    chown www-data:ubuntu /var/www
+    chmod 775 /var/www
+  fi
+
+  echo "* Adding smbuser ubuntu with password ubuntu"
+  (echo ubuntu; echo ubuntu) | smbpasswd -s -a ubuntu
+  cp /srv/config/samba-config/smb.conf /etc/samba/
+  echo "* Copied /srv/config/samba-config/smb.conf to /etc/samba/smb.conf"
 }
 
 elasticsearch_setup() {
@@ -414,6 +465,7 @@ services_restart() {
   # php5enmod mcrypt
 
   service php5.6-fpm restart
+  service smbd restart
 
   # Restart Rabbit MQ
   # service rabbitmq-server restart
@@ -472,6 +524,11 @@ phpfpm_setup
 mysql_setup
 mongod_setup
 redis_setup
+ruby_setup
+nodejs_setup
+nginx_setup
+composer_setup
+samba_setup
 # elasticsearch_setup
 # rabbitmq_setup
 # vsftpd_setup
