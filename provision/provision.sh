@@ -26,18 +26,28 @@ apt_package_install_list=()
 # virtual machine. We'll then loop through each of these and check individual
 # status before adding them to the apt_package_install_list array.
 apt_package_check_list=(
-    php5.6-dev
-    php5.6-fpm
-    php5.6-cli
-    php5.6-mongo
-    php5.6-redis
-    php5.6-mbstring
-    php5.6-mcrypt
-    php5.6-curl
-    php5.6-intl
-    php5.6-ftp
-    php5.6-xdebug
-    php5.6-xml
+    # php5.6-dev
+    # php5.6-fpm
+    # php5.6-cli
+    # php5.6-mongo
+    # php5.6-redis
+    # php5.6-mbstring
+    # php5.6-mcrypt
+    # php5.6-curl
+    # php5.6-intl
+    # php5.6-ftp
+    # php5.6-xdebug
+    # php5.6-xml
+    php-dev
+    php-fpm
+    php-cli
+    php-redis
+    php-mbstring
+    php-mcrypt
+    php-curl
+    php-intl
+    php-xdebug
+    php-xml
     redis-server
     nginx
     htop
@@ -49,7 +59,6 @@ apt_package_check_list=(
     gettext
     ntp
     postfix
-    mongodb-org
     mysql-server
     ruby
     ruby-dev
@@ -83,7 +92,7 @@ network_check() {
 }
 
 noroot() {
-  sudo -EH -u "vagrant" "$@";
+  sudo -EH -u "ubuntu" "$@";
 }
 
 profile_setup() {
@@ -172,7 +181,7 @@ package_install() {
 
   # Add Redis and PHP PPA
   add-apt-repository ppa:chris-lea/redis-server
-  LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php
+  # LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php
 
   # Update all of the package references before installing anything
   echo "Running apt-get update..."
@@ -251,21 +260,21 @@ nginx_setup() {
 
 phpfpm_setup() {
   # Copy php-fpm configuration from local
-  cp "/srv/config/php5-fpm-config/php5-fpm.conf" "/etc/php/5.6/fpm/php-fpm.conf"
-  cp "/srv/config/php5-fpm-config/www.conf" "/etc/php/5.6/fpm/pool.d/www.conf"
-  cp "/srv/config/php5-fpm-config/php-custom.ini" "/etc/php/5.6/fpm/conf.d/php-custom.ini"
-  cp "/srv/config/php5-fpm-config/opcache.ini" "/etc/php/5.6/fpm/conf.d/opcache.ini"
-  # cp "/srv/config/php5-fpm-config/xdebug.ini" "/etc/php/5.6/mods-available/xdebug.ini"
+  cp "/srv/config/php7-fpm-config/php-fpm.conf" "/etc/php/7.0/fpm/php-fpm.conf"
+  cp "/srv/config/php7-fpm-config/www.conf" "/etc/php/7.0/fpm/pool.d/www.conf"
+  cp "/srv/config/php7-fpm-config/php-custom.ini" "/etc/php/7.0/fpm/conf.d/php-custom.ini"
+  cp "/srv/config/php7-fpm-config/opcache.ini" "/etc/php/7.0/fpm/conf.d/opcache.ini"
+  # cp "/srv/config/php7-fpm-config/xdebug.ini" "/etc/php/5.6/mods-available/xdebug.ini"
 
   # Find the path to Xdebug and prepend it to xdebug.ini
   # XDEBUG_PATH=$( find /usr -name 'xdebug.so' | head -1 )
   # sed -i "1izend_extension=\"$XDEBUG_PATH\"" "/etc/php/5.6/mods-available/xdebug.ini"
 
-  echo " * Copied /srv/config/php5-fpm-config/php5-fpm.conf     to /etc/php/5.6/fpm/php5-fpm.conf"
-  echo " * Copied /srv/config/php5-fpm-config/www.conf          to /etc/php/5.6/fpm/pool.d/www.conf"
-  echo " * Copied /srv/config/php5-fpm-config/php-custom.ini    to /etc/php/5.6/fpm/conf.d/php-custom.ini"
-  echo " * Copied /srv/config/php5-fpm-config/opcache.ini       to /etc/php/5.6/fpm/conf.d/opcache.ini"
-  echo " * Copied /srv/config/php5-fpm-config/xdebug.ini        to /etc/php/5.6/mods-available/xdebug.ini"
+  echo " * Copied /srv/config/php7-fpm-config/php-fpm.conf     to /etc/php/7.0/fpm/php-fpm.conf"
+  echo " * Copied /srv/config/php7-fpm-config/www.conf          to /etc/php/7.0/fpm/pool.d/www.conf"
+  echo " * Copied /srv/config/php7-fpm-config/php-custom.ini    to /etc/php/7.0/fpm/conf.d/php-custom.ini"
+  echo " * Copied /srv/config/php7-fpm-config/opcache.ini       to /etc/php/7.0/fpm/conf.d/opcache.ini"
+  echo " * Copied /srv/config/php7-fpm-config/xdebug.ini        to /etc/php/7.0/mods-available/xdebug.ini"
 }
 
 redis_setup() {
@@ -311,50 +320,50 @@ samba_setup() {
   echo "* Copied /srv/config/samba-config/smb.conf to /etc/samba/smb.conf"
 }
 
-elasticsearch_setup() {
-  # Copy Config
-  cp "/srv/config/elasticsearch-config/elasticsearch.yml" "/etc/elasticsearch/elasticsearch.yml"
-  echo " * Copied /srv/config/elasticsearch-config/elasticsearch.yml    to /etc/elasticsearch/elasticsearch.yml"
+# elasticsearch_setup() {
+#   # Copy Config
+#   cp "/srv/config/elasticsearch-config/elasticsearch.yml" "/etc/elasticsearch/elasticsearch.yml"
+#   echo " * Copied /srv/config/elasticsearch-config/elasticsearch.yml    to /etc/elasticsearch/elasticsearch.yml"
 
-  cd /usr/share/elasticsearch
+#   cd /usr/share/elasticsearch
 
-  if [[ -d "/usr/share/elasticsearch/plugins/head" ]]; then
-      echo -e "\nSkip plugin head"
-  else
-      echo -e "\nInstalling plugin head"
-      bin/plugin install mobz/elasticsearch-head
-  fi
+#   if [[ -d "/usr/share/elasticsearch/plugins/head" ]]; then
+#       echo -e "\nSkip plugin head"
+#   else
+#       echo -e "\nInstalling plugin head"
+#       bin/plugin install mobz/elasticsearch-head
+#   fi
 
-  if [[ -d "/usr/share/elasticsearch/plugins/bundle" ]]; then
-      echo -e "\nSkip plugin bundle"
-  else
-    echo -e "\nInstalling plugin bundle"
-    bin/plugin install 'https://github.com/jprante/elasticsearch-plugin-bundle/releases/download/2.2.0.2/elasticsearch-plugin-bundle-2.2.0.2-plugin.zip'
-  fi
+#   if [[ -d "/usr/share/elasticsearch/plugins/bundle" ]]; then
+#       echo -e "\nSkip plugin bundle"
+#   else
+#     echo -e "\nInstalling plugin bundle"
+#     bin/plugin install 'https://github.com/jprante/elasticsearch-plugin-bundle/releases/download/2.2.0.2/elasticsearch-plugin-bundle-2.2.0.2-plugin.zip'
+#   fi
 
-  if [[ -d "/usr/share/elasticsearch/plugins/license" ]]; then
-      echo -e "\nSkip plugin license"
-  else
-      echo -e "\nInstalling plugin license"
-      bin/plugin install license
-  fi
+#   if [[ -d "/usr/share/elasticsearch/plugins/license" ]]; then
+#       echo -e "\nSkip plugin license"
+#   else
+#       echo -e "\nInstalling plugin license"
+#       bin/plugin install license
+#   fi
 
-  if [[ -d "/usr/share/elasticsearch/plugins/marvel-agent" ]]; then
-      echo -e "\nSkip plugin marvel"
-  else
-      echo -e "\nInstalling plugin marvel"
-      echo "y" | bin/plugin install marvel-agent
-      /opt/kibana/bin/kibana plugin --install elasticsearch/marvel/latest
-  fi
+#   if [[ -d "/usr/share/elasticsearch/plugins/marvel-agent" ]]; then
+#       echo -e "\nSkip plugin marvel"
+#   else
+#       echo -e "\nInstalling plugin marvel"
+#       echo "y" | bin/plugin install marvel-agent
+#       /opt/kibana/bin/kibana plugin --install elasticsearch/marvel/latest
+#   fi
 
-  cp "/srv/config/elasticsearch-config/kibana" "/etc/default/kibana"
-  echo " * Copied /srv/config/elasticsearch-config/kibana to /etc/default/kibana"
+#   cp "/srv/config/elasticsearch-config/kibana" "/etc/default/kibana"
+#   echo " * Copied /srv/config/elasticsearch-config/kibana to /etc/default/kibana"
 
-  update-rc.d elasticsearch defaults 95 10
-  update-rc.d kibana defaults 95 10
-  service elasticsearch restart
-  service kibana restart
-}
+#   update-rc.d elasticsearch defaults 95 10
+#   update-rc.d kibana defaults 95 10
+#   service elasticsearch restart
+#   service kibana restart
+# }
 
 mysql_setup() {
   # If MySQL is installed, go through the various imports and service tasks.
@@ -406,17 +415,17 @@ mysql_setup() {
   fi
 }
 
-mongod_setup() {
-  # Copy mysql configuration from local
-  cp "/srv/config/mongod-config/mongod.conf" "/etc/mongod.conf"
-  cp "/srv/config/mongod-config/mongod.service" "/lib/systemd/system/mongod.service"
-  systemctl enable mongod
-  echo " * Copied /srv/config/mongod-config/mongod.conf      to /etc/mongod.conf"
-  echo " * Copied /srv/config/mongod-config/mongod.service   to /lib/systemd/system/mongod.service"
+# mongod_setup() {
+#   # Copy mysql configuration from local
+#   cp "/srv/config/mongod-config/mongod.conf" "/etc/mongod.conf"
+#   cp "/srv/config/mongod-config/mongod.service" "/lib/systemd/system/mongod.service"
+#   systemctl enable mongod
+#   echo " * Copied /srv/config/mongod-config/mongod.conf      to /etc/mongod.conf"
+#   echo " * Copied /srv/config/mongod-config/mongod.service   to /lib/systemd/system/mongod.service"
 
-  echo "service mongod restart"
-  service mongod restart
-}
+#   echo "service mongod restart"
+#   service mongod restart
+# }
 
 tools_install() {
   pecl install xdebug
@@ -464,7 +473,7 @@ services_restart() {
   # Enable PHP mcrypt module by default
   # php5enmod mcrypt
 
-  service php5.6-fpm restart
+  service php7.0-fpm restart
   service smbd restart
 
   # Restart Rabbit MQ
@@ -474,20 +483,20 @@ services_restart() {
   # service vsftpd restart
 }
 
-rabbitmq_setup() {
-  # Enable Plugins
-  echo -e "\nEnable RabbitMQ Plugins"
-  rabbitmq-plugins enable rabbitmq_management
-  echo -e "\nPlugin rabbitmq_management enabled"
+# rabbitmq_setup() {
+#   # Enable Plugins
+#   echo -e "\nEnable RabbitMQ Plugins"
+#   rabbitmq-plugins enable rabbitmq_management
+#   echo -e "\nPlugin rabbitmq_management enabled"
 
-  # Add User
-  rabbitmqctl add_user vagrant vagrant
-  echo -e "\nUser vagrant with password vagrant created"
+#   # Add User
+#   rabbitmqctl add_user vagrant vagrant
+#   echo -e "\nUser vagrant with password vagrant created"
 
-  # Set permission
-  rabbitmqctl set_user_tags vagrant administrator
-  echo -e "\nUser promoted"
-}
+#   # Set permission
+#   rabbitmqctl set_user_tags vagrant administrator
+#   echo -e "\nUser promoted"
+# }
 
 htop_setup() {
     if [[ ! -d "/home/vagrant/.config/htop" ]]; then
@@ -522,7 +531,7 @@ htop_setup
 nginx_setup
 phpfpm_setup
 mysql_setup
-mongod_setup
+# mongod_setup
 redis_setup
 ruby_setup
 nodejs_setup

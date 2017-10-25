@@ -54,7 +54,7 @@ Vagrant.configure(2) do |config|
   config.vm.network :private_network, id: "spinebox_primary", ip: "192.168.56.105"
 
   config.vm.provider :hyperv do |v, override|
-    override.vm.network :private_network, id: "spinebox_primary", ip: nil
+    override.vm.network "private_network", id: "spinebox_primary", ip: nil
   end
 
   # Drive mapping
