@@ -48,7 +48,12 @@ apt_package_check_list=(
     php-intl
     php-xdebug
     php-xml
+    php-mysql
+    php-gd
+    php-memcache
     redis-server
+    memcached
+    imagemagick
     nginx
     htop
     git-core
@@ -310,7 +315,7 @@ composer_setup() {
 samba_setup() {
   if [[ ! -d "/var/www" ]]; then
     mkdir /var/www
-    chown www-data:ubuntu /var/www
+    chown ubuntu:ubuntu /var/www
     chmod 775 /var/www
   fi
 
