@@ -249,14 +249,16 @@ nginx_setup() {
   cp "/srv/config/nginx-config/nginx.conf" "/etc/nginx/nginx.conf"
   cp "/srv/config/nginx-config/fastcgi_params" "/etc/nginx/"
   cp "/srv/config/nginx-config/upstream.conf" "/etc/nginx/conf.d/"
+  cp "/srv/config/nginx-config/options-ssl-nginx.conf" "/etc/nginx/conf.d/"
 
   if [[ ! -d "/etc/nginx/custom-sites" ]]; then
     mkdir "/etc/nginx/custom-sites/"
   fi
   rsync -rvzh --delete "/srv/config/nginx-config/sites/" "/etc/nginx/custom-sites/"
   rm -rf /etc/nginx/conf.d/default.conf
-  echo " * Copied /srv/config/nginx-config/nginx.conf           to /etc/nginx/nginx.conf"
-  echo " * Rsync'd /srv/config/nginx-config/sites/              to /etc/nginx/custom-sites"
+  echo " * Copied /srv/config/nginx-config/nginx.conf                           to /etc/nginx/nginx.conf"
+  echo " * Rsync'd /srv/config/nginx-config/sites/                              to /etc/nginx/custom-sites"
+  echo " * Rsync'd /srv/config/nginx-config/options-ssl-nginx.conf              to /etc/nginx/options-ssl-nginx.conf"
 
   # Add the vagrant user to the www-data group so that it has better access
   # to PHP and Nginx related files.
@@ -275,7 +277,7 @@ phpfpm_setup() {
   # XDEBUG_PATH=$( find /usr -name 'xdebug.so' | head -1 )
   # sed -i "1izend_extension=\"$XDEBUG_PATH\"" "/etc/php/5.6/mods-available/xdebug.ini"
 
-  echo " * Copied /srv/config/php7-fpm-config/php-fpm.conf     to /etc/php/7.0/fpm/php-fpm.conf"
+  echo " * Copied /srv/config/php7-fpm-config/php-fpm.conf      to /etc/php/7.0/fpm/php-fpm.conf"
   echo " * Copied /srv/config/php7-fpm-config/www.conf          to /etc/php/7.0/fpm/pool.d/www.conf"
   echo " * Copied /srv/config/php7-fpm-config/php-custom.ini    to /etc/php/7.0/fpm/conf.d/php-custom.ini"
   echo " * Copied /srv/config/php7-fpm-config/opcache.ini       to /etc/php/7.0/fpm/conf.d/opcache.ini"

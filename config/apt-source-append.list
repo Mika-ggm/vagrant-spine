@@ -2,8 +2,8 @@
 # deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse
 
 # Provides Nginx mainline
-deb http://nginx.org/packages/mainline/ubuntu/ xenial nginx
-deb-src http://nginx.org/packages/mainline/ubuntu/ xenial nginx
+# deb http://nginx.org/packages/mainline/ubuntu/ xenial nginx
+# deb-src http://nginx.org/packages/mainline/ubuntu/ xenial nginx
 
 # RabbitMQ
 # deb http://www.rabbitmq.com/debian/ testing main
