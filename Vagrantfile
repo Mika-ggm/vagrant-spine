@@ -34,7 +34,38 @@ Vagrant.configure(2) do |config|
   # Enable agent forwarding on vagrant ssh commands. This allows you to use ssh keys
   # on your host machine inside the guest. See the manual for `ssh-add`.
   config.ssh.forward_agent = true
-
+  
+  # Forwarding HTTP Ports
+  config.vm.network "forwarded_port", guest: 8001, host: 8001
+  config.vm.network "forwarded_port", guest: 44301, host: 44301
+  
+  config.vm.network "forwarded_port", guest: 8002, host: 8002
+  config.vm.network "forwarded_port", guest: 44302, host: 44302
+  
+  config.vm.network "forwarded_port", guest: 8003, host: 8003
+  config.vm.network "forwarded_port", guest: 44303, host: 44303
+  
+  config.vm.network "forwarded_port", guest: 8004, host: 8004
+  config.vm.network "forwarded_port", guest: 44304, host: 44304
+  
+  config.vm.network "forwarded_port", guest: 8005, host: 8005
+  config.vm.network "forwarded_port", guest: 44305, host: 44305
+  
+  config.vm.network "forwarded_port", guest: 8006, host: 8006
+  config.vm.network "forwarded_port", guest: 44306, host: 44306
+  
+  config.vm.network "forwarded_port", guest: 44307, host: 44307
+  config.vm.network "forwarded_port", guest: 8007, host: 8007
+  
+  config.vm.network "forwarded_port", guest: 8008, host: 8008
+  config.vm.network "forwarded_port", guest: 44308, host: 44308
+  
+  config.vm.network "forwarded_port", guest: 8009, host: 8009
+  config.vm.network "forwarded_port", guest: 44309, host: 44309
+  
+  config.vm.network "forwarded_port", guest: 8010, host: 8010
+  config.vm.network "forwarded_port", guest: 44310, host: 44310
+  
   config.vm.hostname = "spinebox"
 
   # Private Network (default)
